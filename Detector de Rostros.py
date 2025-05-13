@@ -5,37 +5,63 @@ Created on Mon May 12 08:04:00 2025
 @author: lizet
 """
 
+import sys
 import cv2
 import mediapipe as mp
+from PyQt5 import QtWidgets, uic
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QImage, QPixmap
 
-
-mp_detectar_rostro = mp.solutions.face_detection
-dibujar_rostro = mp.solutions.drawing_utils
-detectar_caras = mp_detectar_rostro.FaceDetection(min_detection_confidence=0.5)
-
-
-camara = cv2.VideoCapture(0)
-
-while camara.isOpened():
-    r, frame = camara.read()
+class MiVentana(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        uic.loadUi("Rostros.ui", self)
+        
+       
+        self.mp_detectar_rostro = mp.solutions.face_detection
+        self.dibujar_rostro = mp.solutions.drawing_utils
+        self.detectar_caras = self.mp_detectar_rostro.FaceDetection(min_detection_confidence=0.5)
+        
+      
+        self.camara = cv2.VideoCapture(0)
+        
+       
+        self.label_video = self.findChild(QtWidgets.QLabel, 'label_video')
     
-    if not r:
-        break
-
-    frame = cv2.flip(frame, 1)
-    
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    
-    resultado = detectar_caras.process(rgb)
-    
-    if resultado.detections:
-        for deteccion in resultado.detections:
-            dibujar_rostro.draw_detection(frame, deteccion)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.actualizar_frame)
+        self.timer.start(30)  
+        
+    def actualizar_frame(self):
+        ret, frame = self.camara.read()
+        if ret:
+            frame = cv2.flip(frame, 1)
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             
-    cv2.imshow('Detector de Rostro', frame)
+            
+            resultado = self.detectar_caras.process(rgb)
+            
+            if resultado.detections:
+                for deteccion in resultado.detections:
+                    self.dibujar_rostro.draw_detection(frame, deteccion)
+            
+        
+            h, w, ch = frame.shape
+            bytes_per_line = ch * w
+            convert_to_Qt_format = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            p = convert_to_Qt_format.scaled(self.label_video.width(), self.label_video.height())
+            
+          
+            self.label_video.setPixmap(QPixmap.fromImage(p))
+    
+    def closeEvent(self, event):
+      
+        self.camara.release()
+        self.timer.stop()
+        super().closeEvent(event)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-camara.release()
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    ventana = MiVentana()
+    ventana.show()
+    sys.exit(app.exec_())
