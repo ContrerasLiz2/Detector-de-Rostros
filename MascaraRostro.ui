@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>611</height>
    </rect>
   </property>
   <property name="font">
@@ -87,6 +87,19 @@
          <string>Reconocimiento de Rostro </string>
         </property>
        </widget>
+      </widget>
+      <widget class="QLabel" name="Camaralabel">
+       <property name="geometry">
+        <rect>
+         <x>14</x>
+         <y>20</y>
+         <width>371</width>
+         <height>481</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
       </widget>
      </widget>
     </item>
